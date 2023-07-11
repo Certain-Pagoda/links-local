@@ -1,0 +1,67 @@
+version: '3.8'
+services:
+  dynamodb-local:
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
+    image: "amazon/dynamodb-local:latest"
+    container_name: dynamodb-local
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./docker/dynamodb:/home/dynamodblocal/data"
+    working_dir: /home/dynamodblocal
+    networks:
+      - back-network
+
+  lintree-core:
+    depends_on:
+      - dynamodb-local
+    build: ./back-1
+    container_name: linktree-core
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./back-1:/app
+    networks:
+      - back-network
+    secrets:
+      - aws_access_key_id
+      - aws_secret_access_key
+      - stripe_webhook_secret
+      - stripe_api_key
+    environment:
+      ENV: local 
+      REGION: eu-west-1
+        #CLIENT_ID: giq994ubkhkhfc3tn7cjt1676 
+        #COGNITO_POOL_ID: eu-west-1_AVOYX3uZU
+      CLIENT_ID: 73ijtu61grkcm8ikel71cfb8vt
+      COGNITO_POOL_ID: eu-west-1_83vVpEPcH
+      HOST: http://dynamodb-local:8000
+      AWS_ACCESS_KEY_ID_FILE: /run/secrets/aws_access_key_id
+      AWS_SECRET_ACCESS_KEY_FILE: /run/secrets/aws_secret_access_key
+      BASE_URL_MAIN: https://www.google.com
+      STRIPE_WEBHOOK_SECRET: /run/secrets/stripe_webhook_secret 
+      STRIPE_API_KEY: /run/secrets/strip_api_key
+      PRICE_LOOKUP_KEY: 1_EURO_PLAN
+
+  linktree-front:
+    depends_on:
+      - lintree-core
+    build: ./links
+    container_name: links-front
+    ports:
+      - 8081:8080
+    networks:
+      - back-network
+
+networks:
+  back-network:
+
+secrets:
+  aws_access_key_id:
+    file: ./back-1/aws_acces_key_id.txt
+  aws_secret_access_key:
+    file: ./back-1/aws_secret_access_key.txt
+  stripe_webhook_secret:
+    file: ./back-1/stripe_webhook_secret.txt
+  stripe_api_key:
+    file: ./back-1/stripe_api_key.txt

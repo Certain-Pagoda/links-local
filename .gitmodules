@@ -1,3 +1,6 @@
 [submodule "back-1"]
 	path = back-1
 	url = https://github.com/Certain-Pagoda/back-1.git
+[submodule "links"]
+	path = links
+	url = https://github.com/Certain-Pagoda/links.git
